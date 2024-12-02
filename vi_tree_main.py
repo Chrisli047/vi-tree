@@ -55,7 +55,7 @@ if __name__ == '__main__':
     for record_id in tqdm(ids, desc="Processing Records", unit="record"):
         record = read_from_sqlite(m, n, conn=conn, record_id=record_id)
         if check_function(record, vertices):
-            print(f"Record with ID {record_id} satisfies the condition: {record}")
+            # print(f"Record with ID {record_id} satisfies the condition: {record}")
             # Insert the record into the VI Tree
             vi_tree.insert(record_id, constraints, vertices, m=m, n=n, db_name=db_name, conn=conn)
 
@@ -65,8 +65,8 @@ if __name__ == '__main__':
     # Print the time taken to insert all records
     print(f"Time taken to insert all records into the VI Tree: {end_time - start_time:.2f} seconds")
 
-    print("\nVI Tree Structure (Layer by Layer with Records):")
-    vi_tree.print_tree_by_layer(m, n, db_name, conn)
+    # print("\nVI Tree Structure (Layer by Layer with Records):")
+    # vi_tree.print_tree_by_layer(m, n, db_name, conn)
 
     # Print the height of the tree
     print(f"Height of the VI Tree: {vi_tree.get_height()}")

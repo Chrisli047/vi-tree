@@ -8,9 +8,9 @@ class TreeNode:
         self.intersection_id = intersection_id  # ID of the intersection (record_id)
         self.constraints = constraints if constraints is not None else []  # Constraints for this node, defaults to []
         self.vertices = vertices if vertices is not None else []  # Associated vertices, defaults to []
-
         self.left_children = None  # Left child
         self.right_children = None  # Right child
+        self.skip_flag = False  # Flag to indicate if this node should be skipped
 
 
 class VITree:
@@ -54,8 +54,17 @@ class VITree:
         # Use a stack to manage nodes for non-recursive traversal
         stack = [self.root]
 
+        # Set to store previously computed vertices
+        previously_computed_vertices = set()
+
         while stack:
             current = stack.pop()
+
+            # Check for vertices that should be skipped
+            # Skip nodes marked with the skip_flag
+            if current.skip_flag:
+                # print(f"Skipping record {current.intersection_id}: Marked as skippable.")
+                continue
 
             # If current.vertices is empty
             if not current.vertices:
@@ -64,13 +73,32 @@ class VITree:
 
                 # Compute vertices
                 current.vertices = compute_vertices(merged_constraints)
-                print(f"Computed vertices for record {record_id}: {current.vertices}")
+                # print(f"Computed vertices for record {record_id}: {current.vertices}")
+
+                # Convert vertices to a frozenset of tuples for comparison
+                current_vertices_set = frozenset(tuple(v) for v in current.vertices)
+
+                # Check if this set of vertices already exists
+                if current_vertices_set in previously_computed_vertices:
+                    # print(f"Skipping record {record_id}: Vertices already computed.")
+                    current.skip_flag = True  # Mark this node to be skipped in future iterations
+                    continue
+
+                # Add the new vertices set to the set of previously computed vertices
+                previously_computed_vertices.add(current_vertices_set)
+
+                # Check if the number of vertices is less than or equal to 2
+                if len(current.vertices) <= 2:
+                    # print(f"Skipping record {record_id}: Not enough vertices.")
+                    # print(f"Vertices: {current.vertices}")
+                    current.skip_flag = True  # Mark this node to be skipped in future iterations
+                    continue
 
                 # Get the record from the database
                 insert_record = read_from_sqlite(m=m, n=n, db_name=db_name, record_id=record_id, conn=conn)
 
                 # Check if the input record_id satisfies the condition
-                if not check_function(insert_record, current.vertices, threshold=1e-6):
+                if not check_function(insert_record, current.vertices, threshold=1e-4):
                     continue  # Skip to the next iteration if not satisfied
 
             # If the current node has no left child and no right child

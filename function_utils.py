@@ -52,7 +52,7 @@ def compute_vertices(constraints):
         vertices = []
         for row in ext.array:
             if row[0] == 1.0:  # This indicates a vertex
-                vertex = [round(coord, 6) for coord in row[1:]]
+                vertex = [round(coord, 4) for coord in row[1:]]
                 vertices.append(vertex)
 
         return vertices

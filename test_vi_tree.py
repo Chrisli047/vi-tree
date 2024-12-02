@@ -24,7 +24,7 @@ def test_vi_tree(m, n, db_name="test_intersections.db"):
 if __name__ == "__main__":
     # Define test cases with different m and n values
     test_cases = [
-        (4, 2)  # Example with m=5, n=3
+        (100, 2)  # Example with m=5, n=3
         # (10, 3),  # Example with m=10, n=2
     ]
 
