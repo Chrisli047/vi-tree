@@ -7,9 +7,9 @@ def run_simple_test(m, n, low, high, constant_low, constant_high, db_name="test_
     """Run a simple test to verify functionality for a specific m and n."""
 
     # Cleanup
-    # if os.path.exists(db_name):
-    #     os.remove(db_name)
-    #     print(f"\nCleaned up test database: {db_name}")
+    if os.path.exists(db_name):
+        os.remove(db_name)
+        print(f"\nCleaned up test database: {db_name}")
 
 
     # Generate functions
