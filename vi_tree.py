@@ -1,4 +1,4 @@
-from function_utils import check_function, compute_vertices, merge_constraints
+from function_utils import check_function, compute_vertices, merge_constraints, get_tight_constraints
 from sqlite_utils import read_from_sqlite
 
 init_constraints = []  # Global variable to store initial constraints
@@ -17,7 +17,7 @@ class VITree:
     def __init__(self):
         self.root = None  # Initialize the tree with no root
 
-    def insert(self, record_id, constraints, vertices=None, m=None, n=None, db_name=None, conn=None):
+    def  insert(self, record_id, constraints, vertices=None, m=None, n=None, db_name=None, conn=None):
         """
         Insert a node into the VI tree using a non-recursive method.
         Parameters:
@@ -59,12 +59,25 @@ class VITree:
 
         while stack:
             current = stack.pop()
+            # Get the record from the database
+            insert_record = read_from_sqlite(m=m, n=n, db_name=db_name, record_id=record_id, conn=conn)
 
             # Check for vertices that should be skipped
             # Skip nodes marked with the skip_flag
             if current.skip_flag:
                 # print(f"Skipping record {current.intersection_id}: Marked as skippable.")
                 continue
+
+            if len(current.vertices) != 0:
+                if not check_function(insert_record, current.vertices, threshold=1e-4):
+                    continue  # Skip to the next iteration if not satisfied
+
+                # Add left and right children to the stack for further traversal
+                if current.left_children is not None:
+                    stack.append(current.left_children)
+                if current.right_children is not None:
+                    stack.append(current.right_children)
+
 
             # If current.vertices is empty
             if not current.vertices:
@@ -73,19 +86,24 @@ class VITree:
 
                 # Compute vertices
                 current.vertices = compute_vertices(merged_constraints)
+                # current.constraints = get_tight_constraints(current.constraints, current.vertices, m, n, db_name, conn)
+                # print("current constraints: ", current.constraints)
+
+                # print("merged_constraints: ", merged_constraints)
+                # print(f"Computed vertices for record {record_id}: {current.vertices}")
                 # print(f"Computed vertices for record {record_id}: {current.vertices}")
 
-                # Convert vertices to a frozenset of tuples for comparison
-                current_vertices_set = frozenset(tuple(v) for v in current.vertices)
-
-                # Check if this set of vertices already exists
-                if current_vertices_set in previously_computed_vertices:
-                    # print(f"Skipping record {record_id}: Vertices already computed.")
-                    current.skip_flag = True  # Mark this node to be skipped in future iterations
-                    continue
-
-                # Add the new vertices set to the set of previously computed vertices
-                previously_computed_vertices.add(current_vertices_set)
+                # # Convert vertices to a frozenset of tuples for comparison
+                # current_vertices_set = frozenset(tuple(v) for v in current.vertices)
+                #
+                # # Check if this set of vertices already exists
+                # if current_vertices_set in previously_computed_vertices:
+                #     # print(f"Skipping record {record_id}: Vertices already computed.")
+                #     current.skip_flag = True  # Mark this node to be skipped in future iterations
+                #     continue
+                #
+                # # Add the new vertices set to the set of previously computed vertices
+                # previously_computed_vertices.add(current_vertices_set)
 
                 # Check if the number of vertices is less than or equal to 2
                 if len(current.vertices) <= 2:
@@ -94,30 +112,28 @@ class VITree:
                     current.skip_flag = True  # Mark this node to be skipped in future iterations
                     continue
 
-                # Get the record from the database
-                insert_record = read_from_sqlite(m=m, n=n, db_name=db_name, record_id=record_id, conn=conn)
 
                 # Check if the input record_id satisfies the condition
                 if not check_function(insert_record, current.vertices, threshold=1e-4):
                     continue  # Skip to the next iteration if not satisfied
 
-            # If the current node has no left child and no right child
-            if current.left_children is None and current.right_children is None:
-                current.left_children = TreeNode(
-                    -record_id,
-                    constraints=[-record_id] + current.constraints
-                )
-                current.right_children = TreeNode(
-                    record_id,
-                    constraints=[record_id] + current.constraints
-                )
-                continue
+                # If the current node has no left child and no right child
+                if current.left_children is None and current.right_children is None:
+                    current.left_children = TreeNode(
+                        -record_id,
+                        constraints=[-record_id] + current.constraints
+                    )
+                    current.right_children = TreeNode(
+                        record_id,
+                        constraints=[record_id] + current.constraints
+                    )
+                    continue
 
-            # Add left and right children to the stack for further traversal
-            if current.left_children is not None:
-                stack.append(current.left_children)
-            if current.right_children is not None:
-                stack.append(current.right_children)
+            # # Add left and right children to the stack for further traversal
+            # if current.left_children is not None:
+            #     stack.append(current.left_children)
+            # if current.right_children is not None:
+            #     stack.append(current.right_children)
 
     def print_tree_by_layer(self, m, n, db_name, conn):
         """

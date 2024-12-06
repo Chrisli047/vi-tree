@@ -1,4 +1,6 @@
 import argparse
+import random
+
 from sqlite_utils import read_from_sqlite, get_all_ids
 from function_utils import generate_constraints, compute_vertices, check_function
 from tqdm import tqdm  # Import the progress bar library
@@ -43,24 +45,47 @@ if __name__ == '__main__':
     vertices = compute_vertices(constraints)
     print(f"Computed vertices of the initial domain: {vertices}")
 
+    # Collect IDs of records that satisfy the condition
+    satisfying_ids = []
+
+    # Process records with progress tracking
+    for record_id in ids:
+        record = read_from_sqlite(m, n, conn=conn, record_id=record_id)
+        if check_function(record, vertices):
+            satisfying_ids.append(record_id)
+
+    # Calculate the number of IDs to sample (20% of the total)
+    sample_size = int(0.2 * len(ids))
+    sampled_ids = random.sample(satisfying_ids, sample_size)
+
     # Initialize the VI Tree
     vi_tree = VITree()
 
     # Fetch and process records by ID
     print("Processing records:")
+
+    # Set a counter for the number of intersection partions the domain
+    counter = 0
+
     # Start the timer
     start_time = time.time()
 
     # Insert records into the VI Tree with progress tracking
-    for record_id in tqdm(ids, desc="Processing Records", unit="record"):
+    for record_id in tqdm(sampled_ids, desc="Processing Records", unit="sampled_records"):
         record = read_from_sqlite(m, n, conn=conn, record_id=record_id)
         if check_function(record, vertices):
+            counter += 1
             # print(f"Record with ID {record_id} satisfies the condition: {record}")
             # Insert the record into the VI Tree
             vi_tree.insert(record_id, constraints, vertices, m=m, n=n, db_name=db_name, conn=conn)
+        # if counter > 10:
+        #     break
 
     # Stop the timer
     end_time = time.time()
+
+    # Print the number of intersection partitions
+    print(f"Number of intersection partitions: {counter}")
 
     # Print the time taken to insert all records
     print(f"Time taken to insert all records into the VI Tree: {end_time - start_time:.2f} seconds")

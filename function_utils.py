@@ -52,7 +52,8 @@ def compute_vertices(constraints):
         vertices = []
         for row in ext.array:
             if row[0] == 1.0:  # This indicates a vertex
-                vertex = [round(coord, 4) for coord in row[1:]]
+                # vertex = [round(coord, 4) for coord in row[1:]]
+                vertex = [coord for coord in row[1:]]
                 vertices.append(vertex)
 
         return vertices
@@ -77,6 +78,8 @@ def check_function(func, vertices, threshold=1e-6) -> bool:
 
     # Convert coefficients to a NumPy array for vectorized operations
     coefficients_array = np.array(coefficients)
+    # print("coefficients_array: ", coefficients_array)
+    # print("vertices: ", vertices)
 
     positive_found = False
     negative_found = False
@@ -87,19 +90,26 @@ def check_function(func, vertices, threshold=1e-6) -> bool:
 
         # Evaluate AX - b for the current vertex
         value = np.dot(coefficients_array, vertex_array) - constant
+        # print("vertex_array: ", vertex_array)
+        # print("value: ", value)
+
+
 
         # Ignore values close to zero (threshold region around AX = b)
-        if abs(value) < threshold:
-            continue
+        # if abs(value) < threshold:
+        #     continue
 
         # Check for positive and negative signs
         if value > 0:
             positive_found = True
+            # print("positive value: ", value)
         elif value < 0:
+            # print("negative value: ", value)
             negative_found = True
 
         # If both positive and negative values are found, return True
         if positive_found and negative_found:
+            # print("Found: ", coefficients_array)
             return True
 
     # If no crossing is found, return False
@@ -138,3 +148,47 @@ def merge_constraints(node_constraints, init_constraints, m, n, db_name, conn):
         merged_constraints.append(record)
 
     return merged_constraints
+
+
+def check_function_tight(func, vertices, atol=1e-10) -> bool:
+    *coefficients, constant = func  # Unpack coefficients and constant
+
+    # Convert coefficients to a NumPy array for vectorized operations
+    coefficients_array = np.array(coefficients)
+    # print("coefficients_array: ", coefficients_array)
+    # print("vertices: ", vertices)
+    counter = 0
+
+    for vertex in vertices:
+        # Convert vertex to a NumPy array
+        vertex_array = np.array(vertex)
+
+        # Evaluate AX - b for the current vertex
+        value = np.dot(coefficients_array, vertex_array) - constant
+
+        # Use np.isclose to check if the value is close to zero
+        if np.isclose(value, 0, atol=atol):
+            counter += 1
+
+        if counter == 2:
+            return True
+
+    # If no crossing is found, return False
+    return False
+
+def get_tight_constraints(constraints, vertices, m, n, db_name, conn):
+    # print("constraints: ", constraints)
+    # print("vertices: ", vertices)
+    tight_constraints = []
+
+
+    for record_id in constraints:
+        record = read_from_sqlite(m=m, n=n, db_name=db_name, record_id=abs(record_id), conn=conn)
+
+        if check_function_tight(record, vertices):
+            tight_constraints.append(record_id)
+
+    # print("loose_constraints: ", constraints)
+    # print("tight_constraints: ", tight_constraints)
+
+    return tight_constraints
