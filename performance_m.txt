@@ -1,0 +1,10 @@
+m=100, n=2, Time taken to insert all records into the VI Tree: 0.07 seconds, Height of the VI Tree: 14, Number of leaf nodes in the VI Tree: 14
+m=200, n=2, Time taken to insert all records into the VI Tree: 3.92 seconds, Height of the VI Tree: 57, Number of leaf nodes in the VI Tree: 4647
+m=300, n=2, Time taken to insert all records into the VI Tree: 10.13 seconds, Height of the VI Tree: 57, Number of leaf nodes in the VI Tree: 11289
+m=400, n=2, Time taken to insert all records into the VI Tree: 16.80 seconds, Height of the VI Tree: 63, Number of leaf nodes in the VI Tree: 18319
+m=500, n=2, Time taken to insert all records into the VI Tree: 48.64 seconds, Height of the VI Tree: 65, Number of leaf nodes in the VI Tree: 50256
+m=600, n=2, Time taken to insert all records into the VI Tree: 100.76 seconds, Height of the VI Tree: 87, Number of leaf nodes in the VI Tree: 90129
+m=700, n=2, Time taken to insert all records into the VI Tree: 133.70 seconds, Height of the VI Tree: 79, Number of leaf nodes in the VI Tree: 121277
+m=800, n=2, Time taken to insert all records into the VI Tree: 194.27 seconds, Height of the VI Tree: 82, Number of leaf nodes in the VI Tree: 163018
+m=900, n=2, Time taken to insert all records into the VI Tree: 207.58 seconds, Height of the VI Tree: 88, Number of leaf nodes in the VI Tree: 175373
+m=1000, n=2, Time taken to insert all records into the VI Tree: 262.55 seconds, Height of the VI Tree: 88, Number of leaf nodes in the VI Tree: 196769
