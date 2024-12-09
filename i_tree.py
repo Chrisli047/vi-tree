@@ -1,7 +1,6 @@
 from function_utils import check_function, compute_vertices, merge_constraints, get_tight_constraints, \
     check_smallest_intervals
 from sqlite_utils import read_from_sqlite
-from vertex_utils import create_lookup_table, process_new_vertices
 
 init_constraints = []  # Global variable to store initial constraints
 
@@ -15,11 +14,11 @@ class TreeNode:
         self.skip_flag = False  # Flag to indicate if this node should be skipped
 
 
-class VITree:
+class ITree:
     def __init__(self):
         self.root = None  # Initialize the tree with no root
 
-    def insert(self, record_id, constraints, vertices=None, m=None, n=None, db_name=None, conn=None, var_min=0, var_max=10, lookup_table=None, interval=0.01):
+    def insert(self, record_id, constraints, vertices=None, m=None, n=None, db_name=None, conn=None):
         """
         Insert a node into the VI tree using a non-recursive method.
         Parameters:
@@ -91,6 +90,7 @@ class VITree:
                 current.constraints = get_tight_constraints(current.constraints, current.vertices, m, n, db_name, conn)
                 # print("current constraints: ", current.constraints)
 
+
                 # Check if the number of vertices is less than or equal to 2
                 if len(current.vertices) <= 2:
                     # print(f"Skipping record {record_id}: Not enough vertices.")
@@ -98,17 +98,9 @@ class VITree:
                     current.skip_flag = True  # Mark this node to be skipped in future iterations
                     continue
 
-                # # # Process new vertices
-                # result = process_new_vertices(lookup_table, current.vertices, interval)
-                # # print(lookup_table)
-                # # print("Result:", result)  # True if new values are introduced, False otherwise
-                # if result == False and check_smallest_intervals(current.vertices, interval):
-                #     current.skip_flag = True
-                #     continue
-                if check_smallest_intervals(current.vertices, interval) == True:
-                    current.skip_flag = True
+                if check_smallest_intervals(current.vertices, 0.01):
+                    current.skip_flag = True  # Mark this node to be skipped in future iterations
                     continue
-
 
                 # Check if the input record_id satisfies the condition
                 if not check_function(insert_record, current.vertices, atol=1e-4):

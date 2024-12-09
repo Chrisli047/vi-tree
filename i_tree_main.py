@@ -7,7 +7,6 @@ from tqdm import tqdm  # Import the progress bar library
 import time  # Import time for measuring execution
 import sqlite3
 
-from vertex_utils import create_lookup_table
 from vi_tree import VITree
 
 if __name__ == '__main__':
@@ -68,11 +67,6 @@ if __name__ == '__main__':
     # Set a counter for the number of intersection partitions the domain
     counter = 0
 
-    interval = 0.0001
-    # Create lookup table
-    lookup_table = create_lookup_table(var_min, var_max, interval, n)
-    # print("Lookup table: ", lookup_table)
-
     # Start the timer
     start_time = time.time()
 
@@ -83,7 +77,7 @@ if __name__ == '__main__':
             counter += 1
             # print(f"Record with ID {record_id} satisfies the condition: {record}")
             # Insert the record into the VI Tree
-            vi_tree.insert(record_id, constraints, vertices, m=m, n=n, db_name=db_name, conn=conn, var_min=var_min, var_max=var_max, lookup_table=lookup_table, interval=interval)
+            vi_tree.insert(record_id, constraints, vertices, m=m, n=n, db_name=db_name, conn=conn)
         # if counter > 4:
         #     break
 

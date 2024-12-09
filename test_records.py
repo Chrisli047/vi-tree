@@ -5,7 +5,7 @@ m_values = range(100, 1100, 100)  # m = 10, 20, 30, 40
 d = 2
 
 # Output file for performance data
-output_file = "performance_m.txt"
+output_file = "performance_m_128_0001.txt"
 
 # Run vi_tree_main.py for each m value
 for m in m_values:

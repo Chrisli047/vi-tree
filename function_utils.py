@@ -45,6 +45,10 @@ def compute_vertices(constraints):
         # Convert to cdd matrix
         mat = cdd.matrix_from_array(rows, rep_type=cdd.RepType.INEQUALITY)
 
+        # Check for redundant rows
+        # redundant_rows = cdd.redundant_rows(mat)
+        # print(f"Redundant rows: {redundant_rows}")
+
         # Create polyhedron from the matrix
         poly = cdd.polyhedron_from_matrix(mat)
         ext = cdd.copy_generators(poly)
@@ -52,7 +56,7 @@ def compute_vertices(constraints):
         vertices = []
         for row in ext.array:
             if row[0] == 1.0:  # This indicates a vertex
-                # vertex = [round(coord, 4) for coord in row[1:]]
+                # vertex = [round(coord, 2) for coord in row[1:]]
                 vertex = [coord for coord in row[1:]]
                 vertices.append(vertex)
 
@@ -62,7 +66,7 @@ def compute_vertices(constraints):
         return []
 
 
-def check_function(func, vertices, threshold=1e-6) -> bool:
+def check_function(func, vertices, atol=0.0001) -> bool:
     """
     Checks if the function AX = b has vertices that satisfy both AX < b and AX > b.
 
@@ -74,6 +78,7 @@ def check_function(func, vertices, threshold=1e-6) -> bool:
     Returns:
         bool: True if there exist vertices with AX < b and AX > b; False otherwise.
     """
+    atol = 0.001
     *coefficients, constant = func  # Unpack coefficients and constant
 
     # Convert coefficients to a NumPy array for vectorized operations
@@ -93,10 +98,8 @@ def check_function(func, vertices, threshold=1e-6) -> bool:
         # print("vertex_array: ", vertex_array)
         # print("value: ", value)
 
-
-
         # Ignore values close to zero (threshold region around AX = b)
-        # if abs(value) < threshold:
+        # if np.isclose(value, 0, atol=atol):
         #     continue
 
         # Check for positive and negative signs
@@ -150,7 +153,7 @@ def merge_constraints(node_constraints, init_constraints, m, n, db_name, conn):
     return merged_constraints
 
 
-def check_function_tight(func, vertices, atol=1e-10) -> bool:
+def check_function_tight(func, vertices, atol=0.0001) -> bool:
     *coefficients, constant = func  # Unpack coefficients and constant
 
     # Convert coefficients to a NumPy array for vectorized operations
@@ -192,3 +195,30 @@ def get_tight_constraints(constraints, vertices, m, n, db_name, conn):
     # print("tight_constraints: ", tight_constraints)
 
     return tight_constraints
+
+
+def check_smallest_intervals(vertices, given_interval):
+    """
+    Check if the actual smallest interval for all axes is <= given_interval.
+
+    Parameters:
+    vertices (list of list): List of vertices, where each vertex is an n-dimensional list.
+    given_interval (float): The given smallest interval to compare with.
+
+    Returns:
+    bool: True if all actual smallest intervals <= given_interval, else False.
+    """
+    vertices = np.array(vertices)  # Convert to numpy array for easier manipulation
+    n_dims = vertices.shape[1]  # Number of dimensions
+
+    for i in range(n_dims):
+        min_value = np.min(vertices[:, i])  # Minimum value along axis i
+        max_value = np.max(vertices[:, i])  # Maximum value along axis i
+        actual_interval = max_value - min_value
+        # print(f"Smallest interval for axis {i}: {actual_interval}")
+
+        if actual_interval > given_interval:
+            return False  # If any axis exceeds the given interval, return False
+
+    # print("Smallest intervals for all axes are within", given_interval)
+    return True  # If all axes are within the given interval, return True

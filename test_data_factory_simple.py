@@ -59,7 +59,10 @@ def run_simple_test(m, n, low, high, constant_low, constant_high, db_name="test_
 if __name__ == "__main__":
     # Test cases for different values of m and n
     test_cases = [
-        (900, 2, 0, 100, 0, 0)
+        (100, 2, 0, 100, 0, 0),
+        (100, 3, 0, 100, 0, 0),
+        (100, 4, 0, 100, 0, 0),
+        (100, 5, 0, 100, 0, 0),
     ]
 
     for m, n, low, high, constant_low, constant_high in test_cases:
